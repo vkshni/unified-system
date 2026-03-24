@@ -29,7 +29,7 @@
 - **Start Function:** `main()` at line 589
 - **Main Loop:** Yes, in after login
 - **Exit Method:** Ends by typing 6 in main loop
-- **Data Files:** `attempts.json`, `vault_data.json`, `vauld_meta.json`
+- **Data Files:** `attempts.json`, `vault_data.json`, `vault_meta.json`
 - **Purpose:** Manages passwords with master password
 
 ## 5. URL Shortener (Week 5)
@@ -40,7 +40,7 @@
 - **Data Files:** `urls.json`
 - **Purpose:** Shortens URL by providing short code
 
-## 6. URL Shortener (Week 6)
+## 6. Snippet Manager (Week 6)
 - **Entry File:** `main.py`
 - **Start Function:** `main()` at line 580
 - **Main Loop:** No, just CLI based commands
