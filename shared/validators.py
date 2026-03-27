@@ -1,111 +1,84 @@
-# Validation happens here!
 from datetime import datetime
+import re
 
 
 # Validate empty fields
 def validate_not_empty(value: str, field_name="Field"):
-
     if value is None or value == "" or value.isspace():
         return (False, f"{field_name} cannot be empty")
-
     return (True, "")
 
 
 # Validate positive number
-def validate_positive_number(value: int, field_name="Amount"):
-
+def validate_positive_number(value, field_name="Amount"):
     try:
-        if int(value) > 0:
+        if float(value) > 0:  # ✅ Use float to accept decimals
             return (True, "")
         else:
             return (False, f"{field_name} must be positive")
-    except ValueError:
-        return (False, f"{field_name} must be number")
+    except (ValueError, TypeError):
+        return (False, f"{field_name} must be a number")
 
 
-# validate dates
-def validate_date_format(date_string, format="DD-MM-YYYYTHH:MM:SS"):
+# Validate dates
+DATE_FORMATS = {
+    "iso": "%Y-%m-%dT%H:%M:%S",
+    "slash": "%d/%m/%Y",
+    "dash": "%d-%m-%Y",
+    "datetime": "%d-%m-%YT%H:%M:%S",
+}
+
+
+def validate_date_format(date_string, format="datetime"):
+    if format in DATE_FORMATS:
+        format_str = DATE_FORMATS[format]
+    else:
+        format_str = format
 
     try:
-        date_obj = datetime.strptime(date_string, format)
+        datetime.strptime(date_string, format_str)
         return (True, "")
-    except:
+    except ValueError:
         return (False, "Invalid date format")
 
 
-# validate urls
+# Validate URLs
 def validate_url(url: str):
-
-    if len(url) > 2000:
-        return (False, "Invalid URL format, max length exceeded")
+    if not url or len(url) > 2000:
+        return (False, "Invalid URL length")
 
     if not (url.startswith("https://") or url.startswith("http://")):
-        return (False, "Invalid URL format")
+        return (False, "URL must start with http:// or https://")
 
-    if "." not in url:
-        return (False, "Invalid URL format")
+    domain = url.replace("https://", "").replace("http://", "")
+    if "." not in domain and "localhost" not in domain:
+        return (False, "Invalid URL domain")
 
     return (True, "")
 
 
-# validate choices
+# Validate choices
 def validate_choice(value, valid_choices, field_name="Value"):
-
     if value not in valid_choices:
-        return (False, f"Must be one of {valid_choices}")
-
+        return (
+            False,
+            f"{field_name} must be one of: {', '.join(map(str, valid_choices))}",
+        )
     return (True, "")
 
 
-# validate tags
+# Validate tags
 def validate_tag(tag: str):
-
-    if tag.isspace():
+    if not tag or tag.isspace():
         return (False, "Invalid tag")
 
-    if len(tag.split(" ")) >= 1:
-        corrected_tag = tag.lower().replace(" ", "_")
-        return (True, corrected_tag)
-
-    return (False, "Invalid tag")
+    corrected_tag = tag.lower().replace(" ", "_").replace("-", "_")
+    return (True, corrected_tag)
 
 
-# validate emails
+# Validate emails
 def validate_email(email: str):
-
-    if "@gmail.com" not in email or len(email) < 10:
-        return (False, "Invalid email")
-
-    return (True, "")
-
-
-if __name__ == "__main__":
-    # amount = 100
-    # is_valid, error_msg = validate_positive_number(amount)
-    # if not is_valid:
-    #     print(f"Error: {error_msg}")
-
-    # is_valid, corrected_tag = validate_tag("")
-    # if is_valid:
-    #     use_tag = corrected_tag
-    #     print(use_tag)
-
-    print(validate_not_empty("hello"))
-    print(validate_not_empty(""))
-    print(validate_not_empty("  "))
-    print(validate_not_empty(None))
-
-    print(validate_positive_number(5))
-    print(validate_positive_number("5"))
-    print(validate_positive_number(0))
-    print(validate_positive_number(-10))
-    print(validate_positive_number("abc"))
-
-    print(validate_url("https://google.com"))
-    print(validate_url("http://site.co"))
-    print(validate_url("google.com"))
-    print(validate_url("https://"))
-
-    print(validate_tag("python"))
-    print(validate_tag("Python Code"))
-    print(validate_tag("REACT-HOOKS"))
+    pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+    if re.match(pattern, email):
+        return (True, "")
+    return (False, "Invalid email format")
