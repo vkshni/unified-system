@@ -1,10 +1,17 @@
 # Authentication
+# Authentication
+import sys
+from pathlib import Path
+
+# Add project root to Python path
+PROJECT_ROOT = Path(__file__).parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
+
+# Now imports work
+from shared.file_handler import JSONFile, file_exists
 import hashlib
 from hmac import compare_digest
-from pathlib import Path
 from datetime import datetime, timedelta
-
-from shared.file_handler import JSONFile, file_exists
 
 # Auth directory
 AUTH_DIR = Path(__file__).parent
@@ -12,21 +19,68 @@ AUTH_DIR = Path(__file__).parent
 # Vault Meta file
 VAULT_META_FILE_PATH = AUTH_DIR / "data" / "vault_meta.json"
 
-vm = JSONFile(VAULT_META_FILE_PATH)
-
 # Attempts file
 ATTEMPTS_FILE_PATH = AUTH_DIR / "data" / "attempts.json"
 MAX_ATTEMPTS = 3
 LOCKOUT_DURATION = 30
 DATETIME_FORMAT = "%d-%m-%YT%H:%M:%S"
-attempt = JSONFile(ATTEMPTS_FILE_PATH)
+
+# Session file
+SESSION_FILE_PATH = AUTH_DIR / "data" / "session.json"
+SESSION_TIMEOUT = 3600  # 1 hour in seconds
+
+# Protected systems
+PROTECTED_SYSTEMS = ["snippet", "penny", "shield"]
 
 
 class AuthService:
 
     def __init__(self):
+        self.vault = JSONFile(VAULT_META_FILE_PATH)
+        self.attempt = JSONFile(ATTEMPTS_FILE_PATH)
+        self.session = JSONFile(SESSION_FILE_PATH)
+        self.is_authenticated = self.check_session()
+
+    # Check session
+    def check_session(self):
+
+        session_data = self.session.read_json(default={})
+
+        if not session_data.get("logged_in"):
+            return False
+
+        # Check if session expired
+        login_time = session_data.get("login_time")
+        if not login_time:
+            return False
+
+        login_dt = datetime.strptime(login_time, DATETIME_FORMAT)
+        if datetime.now() > login_dt + timedelta(seconds=SESSION_TIMEOUT):
+            # Session expired
+            self.logout()
+            return False
+
+        return True
+
+    # Create session
+    def create_session(self):
+        session_data = {
+            "logged_in": True,
+            "login_time": datetime.now().strftime(DATETIME_FORMAT),
+            "user": "master",
+        }
+        self.session.write_json(session_data)
+
+    # Log out
+    def logout(self):
+
         self.is_authenticated = False
-        pass
+        session_data = {"logged_in": False, "login_time": None, "user": None}
+        self.session.write_json(session_data)
+
+    # Get session info
+    def get_session_info(self):
+        return self.session.read_json(default={})
 
     # setup master (one-time)
     def setup_master(self, master_password):
@@ -37,7 +91,7 @@ class AuthService:
 
         # proceed if not
         master_password_hash = self.generate_hash(master_password)
-        vm.write_json({"master_password_hash": master_password_hash})
+        self.vault.write_json({"master_password_hash": master_password_hash})
         return True
 
     # verify_master
@@ -55,21 +109,22 @@ class AuthService:
 
         # successful login
         self.is_authenticated = True
-        attempt.write_json({"failed_attempts": 0, "locked_until": None})
+        self.create_session()
+        self.attempt.write_json({"failed_attempts": 0, "locked_until": None})
         return True
 
     # record failed attempt
     def record_failed_attempt(self):
 
         # read attempt data
-        attempt_data = attempt.read_json()
+        attempt_data = self.attempt.read_json()
 
         failed_attempt = attempt_data.get("failed_attempts", 0)
         failed_attempt += 1
 
         # write updated failed_attempts
         attempt_data["failed_attempts"] = failed_attempt
-        attempt.write_json(attempt_data)
+        self.attempt.write_json(attempt_data)
 
         # Trigger lockout after MAX_ATTEMPTS
         if failed_attempt >= MAX_ATTEMPTS:
@@ -79,12 +134,12 @@ class AuthService:
 
             # write updated locked_until
             attempt_data["locked_until"] = locked_until
-            attempt.write_json(attempt_data)
+            self.attempt.write_json(attempt_data)
 
     # Check if locked out
     def is_locked_out(self):
 
-        attempt_data = attempt.read_json()
+        attempt_data = self.attempt.read_json()
 
         locked_until = attempt_data["locked_until"]
 
@@ -96,7 +151,7 @@ class AuthService:
 
             attempt_data["failed_attempts"] = 0
             attempt_data["locked_until"] = None
-            attempt.write_json(attempt_data)
+            self.attempt.write_json(attempt_data)
             return False
 
         return True
@@ -111,20 +166,47 @@ class AuthService:
     def verify(self, password: str):
 
         input_hash = hashlib.sha256(password.encode()).hexdigest()
-        master_password_hash = vm.read_json().get("master_password_hash", None)
+        master_password_hash = self.vault.read_json().get("master_password_hash", None)
         return compare_digest(input_hash, master_password_hash)
 
-    # decorator to check if authenticated
-    # @staticmethod
-    # def require_auth(func):
+    # Check if protected
+    @staticmethod
+    def is_protected(system_name: str):
 
-    #     def wrapper(args):
+        return system_name in PROTECTED_SYSTEMS
+
+
+# decorator to check if authenticated
+def require_auth(func):
+
+    def wrapper(*args, **kwargs):
+
+        auth = AuthService()
+
+        if not auth.is_authenticated:
+            raise PermissionError("Authentication required! Please login first")
+
+        return func(*args, **kwargs)
+
+    return wrapper
 
 
 if __name__ == "__main__":
     auth = AuthService()
 
     # print(auth.setup_master("vks123"))
-    # print(auth.verify("vks123"))
-
+    # print(auth.is_authenticated)
     # print(auth.verify_master("vks123"))
+    # print(auth.is_authenticated)
+
+    # auth2 = AuthService()
+    # print(auth2.is_authenticated)
+
+    # print(auth.is_protected("snippet"))
+    # auth.logout()
+
+    @require_auth
+    def add_password(password):
+        print("FUrther code")
+
+    add_password("vsk")
