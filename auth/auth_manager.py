@@ -1,5 +1,4 @@
 # Authentication
-# Authentication
 import sys
 from pathlib import Path
 
@@ -86,7 +85,7 @@ class AuthService:
     def setup_master(self, master_password):
 
         # check if vault meta initialized
-        if file_exists(VAULT_META_FILE_PATH):
+        if self.is_initialized():
             raise PermissionError("Vault already initialized")
 
         # proceed if not
@@ -174,6 +173,10 @@ class AuthService:
     def is_protected(system_name: str):
 
         return system_name in PROTECTED_SYSTEMS
+
+    # Check if vault meta initialized or not
+    def is_initialized(self):
+        return file_exists(VAULT_META_FILE_PATH)
 
 
 # decorator to check if authenticated
