@@ -17,43 +17,13 @@ CONFIG_FILE_PATH = IDGEN_DIR / "data" / "config.json"
 COUNTER_FILE_PATH = IDGEN_DIR / "data" / "counter.json"
 
 
-# class JSONFile:
-
-#     def __init__(self, file_name: str) -> None:
-#         """JSONFile Constructor"""
-
-#         self.file_path = self.create_file(BASE_DIR, file_name)
-
-#     def create_file(self, BASE_DIR: str, file_name: str) -> str:
-#         """Creates file if file doesn't exists"""
-
-#         path = BASE_DIR / file_name
-#         if not path.exists():
-#             with open(path, "x") as f:
-#                 pass
-#         return path
-
-#     def read_all(self) -> dict:
-
-#         with open(self.file_path, "r") as f:
-
-#             data = json.load(f)
-#             return data
-
-#     def write_all(self, data):
-
-#         with open(self.file_path, "w") as f:
-
-#             json.dump(data, f, indent=4)
-#             return True
-
 # Counter
 
 
 class CounterFile:
 
-    def __init__(self):
-        self.json_handler = JSONFile(COUNTER_FILE_PATH)
+    def __init__(self, COUNTER_FILE=COUNTER_FILE_PATH):
+        self.json_handler = JSONFile(COUNTER_FILE)
         self.config = ConfigFile()
         self.initialize_file()
 
@@ -117,8 +87,8 @@ class CounterFile:
 
 class ConfigFile:
 
-    def __init__(self):
-        self.json_handler = JSONFile(CONFIG_FILE_PATH)
+    def __init__(self, CONFIG_FILE=CONFIG_FILE_PATH):
+        self.json_handler = JSONFile(CONFIG_FILE)
         self.initialize_file()
 
     def initialize_file(self):
