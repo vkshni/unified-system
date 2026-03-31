@@ -5,8 +5,8 @@ import threading
 import string
 import random
 
-from storage import CounterFile, ConfigFile
-from exceptions import (
+from modules.idgen.storage import CounterFile, ConfigFile
+from modules.idgen.exceptions import (
     IDTypeExistsError,
     IDTypeNotFoundError,
     InvalidIDTypeNameError,
@@ -17,6 +17,11 @@ PROJECT_DIR = Path(__file__).parent.parent.parent
 sys.path.append(str(PROJECT_DIR))
 
 from shared.validators import validate_not_empty
+
+# Files and directories
+IDGEN_DIR = Path(__file__).parent
+CONFIG_FILE_PATH = IDGEN_DIR / "data" / "config.json"
+COUNTER_FILE_PATH = IDGEN_DIR / "data" / "counter.json"
 
 
 # ID Generator
@@ -30,13 +35,15 @@ class IDGenerator:
     Persists state to JSON files for durability across restarts.
     """
 
-    def __init__(self) -> None:
+    def __init__(
+        self, CONFIG_FILE=CONFIG_FILE_PATH, COUNTER_FILE=COUNTER_FILE_PATH
+    ) -> None:
         """
         ID Generator Constructor
         """
 
-        self.counter = CounterFile()
-        self.config = ConfigFile()
+        self.config = ConfigFile(CONFIG_FILE)
+        self.counter = CounterFile(COUNTER_FILE)
         self.lock = threading.Lock()
 
     def generate(self, id_type: str) -> str:
