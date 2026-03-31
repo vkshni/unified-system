@@ -9,6 +9,7 @@ sys.path.append(str(PROJECT_ROOT))
 
 # Project modules
 from config.systems import SYSTEMS
+from shared import ui_utils as ui
 
 
 # Get system info
@@ -81,11 +82,9 @@ def route_to_shell(system_name):
         module.run_shell()
 
     except ImportError as e:
-        print(f"✗ Error loading {system_name}: {e}")
-        raise
+        raise ImportError(f"Error loading {system_name}: {e}")
     except Exception as e:
-        print(f"✗ Error running {system_name}: {e}")
-        raise
+        raise ImportError(f"Error running {system_name}: {e}")
 
 
 # Route to command
