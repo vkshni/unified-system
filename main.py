@@ -61,7 +61,6 @@ def cmd_init(args):
 # welcome screen
 def cmd_welcome():
 
-    ui.clear_screen()
     ui.print_header("UNIFIED SYSTEM v1.0")
     print(
         """Available Systems:
@@ -80,18 +79,90 @@ Commands:
     )
 
     user_input = ui.get_input("Enter system name (or exit): ")
-    if user_input == "exit":
-        return "exit"
-    if user_input not in SYSTEMS:
-        print(f"System name '{user_input}' not found")
-        return False
-
     return user_input
 
 
 # help
 def cmd_help(args):
-    print("Help Message! (To be implemented)")
+    ui.print_header("UNIFIED CLI SYSTEM - HELP")
+    print(
+        """
+USAGE:
+  python main.py                    - Interactive menu mode
+  python main.py <system>           - Enter system shell
+  python main.py <system> <command> - Execute direct command
+  python main.py init               - First-time setup
+  python main.py help               - Show this help
+
+AVAILABLE SYSTEMS:
+"""
+    )
+    from config.systems import SYSTEMS
+
+    for key, info in SYSTEMS.items():
+        protected = "[AUTH]" if info["protected"] else "      "
+        print(f"  {protected} {key:10} - {info['description']}")
+
+    print(
+        """
+EXAMPLES:
+  python main.py taski
+  python main.py taski add "Fix bug"
+  python main.py penny add 50 food
+  python main.py shield
+"""
+    )
+
+
+# Systems commands
+def cmd_idgen():
+    run_shell_mode("idgen")
+
+
+# Menu mode
+def run_menu_mode():
+
+    from core.router import route_to_shell, system_exists
+
+    while True:
+        system_name = cmd_welcome()
+
+        if system_name == "exit":
+            print("\n👋 Goodbye!\n")
+            sys.exit(0)
+
+        if not system_name:
+            continue
+        if not system_exists(system_name):
+            ui.print_error(f"System name '{system_name}' not found")
+            continue
+
+        # Route to system
+        try:
+            route_to_shell(system_name)
+        except KeyboardInterrupt:
+            print("\n")
+            continue
+        except Exception as e:
+            ui.print_error(f"Error: {e}")
+            continue
+
+
+# Shell mode
+def run_shell_mode(system_name):
+
+    try:
+        # route_to_shell(system_name)
+        pass
+    except ValueError as e:
+        ui.print_error(e)
+    except Exception as e:
+        ui.print_error(e)
+
+
+# Direct mode
+def run_direct_mode():
+    pass
 
 
 def main():
@@ -99,11 +170,10 @@ def main():
     ui.clear_screen()
 
     parser = argparse.ArgumentParser(
-        prog="main.py", description=ui.print_header("UNIFIED SYSTEM V1.0")
+        prog="main.py", description="Unified CLI System v1.0"
     )
 
     sub = parser.add_subparsers(dest="command", help="Available commands")
-    # sub.required = True
 
     # ========== INIT ==========
     p_init = sub.add_parser(
@@ -117,31 +187,32 @@ def main():
     p_help = sub.add_parser("help", help="Help")
     p_help.set_defaults(func=cmd_help)
 
-    # Parse and execute
-    args = parser.parse_args()
+    # ========== IDGEN ==========
+    p_idgen = sub.add_parser("idgen", help="idgen")
+    p_idgen.set_defaults(func=cmd_idgen)
 
-    try:
-        # If no command provided, show help
-        if len(sys.argv) == 1:
-            mode = "menu"
-            system_name = cmd_welcome()
-            while True:
-                if system_name == "exit":
-                    print("\nExiting system. Good bye!\n")
-                    sys.exit(0)
-        elif len(sys.argv) == 2:
-            mode = "shell"
-            system_name = sys.argv[1]
-        else:
-            mode = "direct"
-            system_name = sys.argv[1]
-            command_args = sys.argv[2:]
+    # If no argument, run menu mode
+    if len(sys.argv) == 1:
+        run_menu_mode()
 
+    # Special commands
+    elif sys.argv[1] in ["init", "help"]:
+
+        # Parse and execute
+        args = parser.parse_args()
         args.func(args)
 
-    except Exception as e:
-        print(f"Error: {e}")
-        sys.exit(1)
+    # System mode only, shell mode
+    elif len(sys.argv) == 2:
+        system_name = sys.argv[1]
+        run_shell_mode(system_name)
+
+    # System name + args, direct command mode
+    else:
+        system_name = sys.argv[1]
+        command_args = sys.argv[2:]
+        exit_code = run_direct_mode(system_name, command_args)
+        sys.exit(exit_code)
 
 
 if __name__ == "__main__":
