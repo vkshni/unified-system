@@ -28,7 +28,7 @@ def require_init(func):
 
 
 # Commands
-def cmd_init(args):
+def cmd_init():
 
     if auth.is_initialized():
         print("\n✗ System already initialized\n")
@@ -83,7 +83,7 @@ Commands:
 
 
 # help
-def cmd_help(args):
+def cmd_help():
     ui.print_header("UNIFIED CLI SYSTEM - HELP")
     print(
         """
@@ -112,11 +112,6 @@ EXAMPLES:
   python main.py shield
 """
     )
-
-
-# Systems commands
-def cmd_idgen():
-    run_shell_mode("idgen")
 
 
 # Menu mode
@@ -151,23 +146,46 @@ def run_menu_mode():
 # Shell mode
 def run_shell_mode(system_name):
 
+    from core.router import system_exists, route_to_shell
+
+    if not system_exists(system_name):
+        ui.print_error(f"System '{system_name}' not found")
+        print("Run 'python main.py' to see available systems")
+        sys.exit(2)
+
     try:
-        # route_to_shell(system_name)
-        pass
-    except ValueError as e:
-        ui.print_error(e)
+        route_to_shell(system_name)
+    except KeyboardInterrupt:
+        print("\n")
     except Exception as e:
-        ui.print_error(e)
+        ui.print_error(f"Error: {e}")
+        sys.exit(1)
 
 
 # Direct mode
-def run_direct_mode():
-    pass
+def run_direct_mode(system_name, args):
+
+    from core.router import route_to_command, system_exists
+
+    # Check if system exists
+    if not system_exists(system_name):
+        ui.print_error(f"System '{system_name}' not found")
+        print("Run 'python main.py' to see available systems")
+        return 2
+    try:
+        exit_code = route_to_command(system_name, args)
+        return exit_code
+    except KeyboardInterrupt:
+        print("\n")
+        return 130
+    except Exception as e:
+        ui.print_error(f"Error: {e}")
+        return 1
 
 
 def main():
 
-    ui.clear_screen()
+    # ui.clear_screen()
 
     parser = argparse.ArgumentParser(
         prog="main.py", description="Unified CLI System v1.0"
@@ -186,10 +204,6 @@ def main():
     # ========== HELP ==========
     p_help = sub.add_parser("help", help="Help")
     p_help.set_defaults(func=cmd_help)
-
-    # ========== IDGEN ==========
-    p_idgen = sub.add_parser("idgen", help="idgen")
-    p_idgen.set_defaults(func=cmd_idgen)
 
     # If no argument, run menu mode
     if len(sys.argv) == 1:
