@@ -41,7 +41,7 @@ def run_shell():
             args = parts[1:] if len(parts) > 1 else []
 
             if command == "exit":
-                print("\nExiting idgen!\n")
+                print("\n👋 Exiting idgen!\n")
                 break
 
             result = execute_command([command] + args)
@@ -55,15 +55,6 @@ def run_shell():
         except Exception as e:
             print_error(f"Error: {e}")
 
-    #     elif command == "generate":
-    #         id_type = args[1].strip()
-    #         generated_id = idg.generate(id_type)
-    #         print_success(f"Generated: {generated_id}")
-
-    #     elif command == "list":
-
-    # print("Leaving idgen shell")
-
 
 def execute_command(args):
 
@@ -74,16 +65,57 @@ def execute_command(args):
     try:
         if command == "generate":
 
+            if not args[1:]:
+                print_error(f"No arguments passed")
+                return 2
+
             # Parser Arguments
             parser = argparse.ArgumentParser()
+            parser.add_argument("type_label")
             parser.add_argument("type")
 
             parsed = parser.parse_args(args[1:])
 
             # Execute
             generated_id = idg.generate(parsed.type)
-            print_success(f"Generated: {generated_id}")
+            print_success(f"Generated successfully: {generated_id}")
             return 0
+
+        elif command == "add":
+
+            if not args[1:]:
+                print_error(f"No arguments passed")
+                return 2
+
+            # Parser Arguments
+            parser = argparse.ArgumentParser()
+            parser.add_argument("id_type_label")
+            parser.add_argument("id_type")
+            parser.add_argument("start_value_label")
+            parser.add_argument("start_value", type=int)
+            parser.add_argument("increment_step_label")
+            parser.add_argument("increment_step", type=int)
+            parser.add_argument("prefix_label")
+            parser.add_argument("prefix")
+            parser.add_argument("padding_label")
+            parser.add_argument("padding", type=int)
+            print(args)
+
+            parsed = parser.parse_args(args[1:])
+
+            # Execute
+            result = idg.add_id_type(
+                parsed.id_type,
+                int(parsed.start_value),
+                int(parsed.increment_step),
+                parsed.prefix,
+                int(parsed.padding),
+            )
+            if result:
+                print_success(f"ID type '{parsed.id_type}' added successfully")
+                return 0
+            else:
+                return 1
 
         elif command == "list":
 
@@ -117,10 +149,16 @@ def execute_command(args):
                 "increment_step",
                 "padding",
             ]
+            print("\n Available ID types \n")
             print_table(headers, formatted_data)
             print()
             print_success(f"Total {len(id_types)} ID type(s) fetched")
             return 0
+
+        else:
+            print_error(f"Command '{command}' doesn't exit")
+            print("Commands: generate, list")
+            return 1
 
     except Exception as e:
         print_error(f"Error: {e}")
