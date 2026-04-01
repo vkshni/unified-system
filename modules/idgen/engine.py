@@ -113,10 +113,10 @@ class IDGenerator:
 
             new_id_type = {
                 id_type: {
-                    "start_value": start_value,
-                    "increment_step": increment_step,
+                    "start_value": int(start_value),
+                    "increment_step": int(increment_step),
                     "prefix": prefix,
-                    "padding": padding,
+                    "padding": int(padding),
                 }
             }
 
@@ -233,7 +233,7 @@ class IDGenerator:
     def validate_id_type_name(self, id_type: str) -> bool:
         """Validates ID type names, throws Errors if invalid"""
 
-        if validate_not_empty(id_type, field_name="id_type"):
+        if not validate_not_empty(id_type, field_name="id_type"):
             raise InvalidIDTypeNameError("ID name cannot be empty")
 
         if not all(c.isalnum() or c == "_" for c in id_type):
