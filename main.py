@@ -123,8 +123,11 @@ def run_menu_mode():
         system_name = cmd_welcome()
 
         if system_name == "exit":
-            print("\n👋 Goodbye!\n")
-            sys.exit(0)
+            if ui.confirm("\nDo you want to exit?"):
+                print("\n👋 Goodbye!\n")
+                sys.exit(0)
+            else:
+                continue
 
         if not system_name:
             continue
