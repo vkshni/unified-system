@@ -10,7 +10,7 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
 # Project modules
-from shared.ui_utils import print_error, print_success, print_table
+from shared.ui_utils import print_error, print_success, print_table, confirm
 from modules.idgen.engine import IDGenerator
 
 # Data Path
@@ -20,6 +20,97 @@ COUNTER_FILE = DATA_DIR / "counter.json"
 
 # Initialize ID Generator
 idg = IDGenerator(CONFIG_FILE=str(CONFIG_FILE), COUNTER_FILE=str(COUNTER_FILE))
+
+
+# Commands
+def cmd_generate(args):
+
+    if not args[1:]:
+        print_error(f"No arguments passed")
+        return 2
+
+    # Parser Arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("type_label")
+    parser.add_argument("type")
+
+    parsed = parser.parse_args(args[1:])
+
+    # Execute
+    generated_id = idg.generate(parsed.type)
+    print_success(f"Generated successfully: {generated_id}")
+    return 0
+
+
+def cmd_add(args):
+
+    if not args[1:]:
+        print_error(f"No arguments passed")
+        return 2
+
+    # Parser Arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("id_type_label")
+    parser.add_argument("id_type")
+    parser.add_argument("start_value_label")
+    parser.add_argument("start_value", type=int)
+    parser.add_argument("increment_step_label")
+    parser.add_argument("increment_step", type=int)
+    parser.add_argument("prefix_label")
+    parser.add_argument("prefix")
+    parser.add_argument("padding_label")
+    parser.add_argument("padding", type=int)
+
+    parsed = parser.parse_args(args[1:])
+
+    # Execute
+    result = idg.add_id_type(
+        parsed.id_type,
+        parsed.start_value,
+        parsed.increment_step,
+        parsed.prefix,
+        parsed.padding,
+    )
+    if result:
+        print_success(f"ID type '{parsed.id_type}' added successfully")
+        return 0
+    else:
+        return 1
+
+
+def cmd_list():
+
+    # Fetching all ID types
+    id_types = idg.list_id_types()
+
+    if not id_types:
+        print("No ID types found")
+        return 0
+
+    formatted_data = [
+        [
+            i["name"],
+            i["prefix"],
+            i["counter"],
+            i["start_value"],
+            i["increment_step"],
+            i["padding"],
+        ]
+        for i in id_types
+    ]
+    headers = [
+        "name",
+        "prefix",
+        "counter",
+        "start_value",
+        "increment_step",
+        "padding",
+    ]
+    print("\n Available ID types \n")
+    print_table(headers, formatted_data)
+    print()
+    print_success(f"Total {len(id_types)} ID type(s) fetched")
+    return 0
 
 
 # Run shell
@@ -41,8 +132,11 @@ def run_shell():
             args = parts[1:] if len(parts) > 1 else []
 
             if command == "exit":
-                print("\n👋 Exiting idgen!\n")
-                break
+                if confirm("Exit idgen?"):
+                    print("\n👋 Exiting idgen!\n")
+                    break
+                else:
+                    continue
 
             result = execute_command([command] + args)
 
@@ -64,96 +158,13 @@ def execute_command(args):
 
     try:
         if command == "generate":
-
-            if not args[1:]:
-                print_error(f"No arguments passed")
-                return 2
-
-            # Parser Arguments
-            parser = argparse.ArgumentParser()
-            parser.add_argument("type_label")
-            parser.add_argument("type")
-
-            parsed = parser.parse_args(args[1:])
-
-            # Execute
-            generated_id = idg.generate(parsed.type)
-            print_success(f"Generated successfully: {generated_id}")
-            return 0
+            return cmd_generate(args)
 
         elif command == "add":
-
-            if not args[1:]:
-                print_error(f"No arguments passed")
-                return 2
-
-            # Parser Arguments
-            parser = argparse.ArgumentParser()
-            parser.add_argument("id_type_label")
-            parser.add_argument("id_type")
-            parser.add_argument("start_value_label")
-            parser.add_argument("start_value", type=int)
-            parser.add_argument("increment_step_label")
-            parser.add_argument("increment_step", type=int)
-            parser.add_argument("prefix_label")
-            parser.add_argument("prefix")
-            parser.add_argument("padding_label")
-            parser.add_argument("padding", type=int)
-            print(args)
-
-            parsed = parser.parse_args(args[1:])
-
-            # Execute
-            result = idg.add_id_type(
-                parsed.id_type,
-                int(parsed.start_value),
-                int(parsed.increment_step),
-                parsed.prefix,
-                int(parsed.padding),
-            )
-            if result:
-                print_success(f"ID type '{parsed.id_type}' added successfully")
-                return 0
-            else:
-                return 1
+            return cmd_add(args)
 
         elif command == "list":
-
-            # Parser Arguments
-            parser = argparse.ArgumentParser()
-            # parser.add_argument("list")
-
-            # Fetching all ID types
-            id_types = idg.list_id_types()
-
-            if not id_types:
-                print("No ID types found")
-                return 0
-
-            formatted_data = [
-                [
-                    i["name"],
-                    i["prefix"],
-                    i["counter"],
-                    i["start_value"],
-                    i["increment_step"],
-                    i["padding"],
-                ]
-                for i in id_types
-            ]
-            headers = [
-                "name",
-                "prefix",
-                "counter",
-                "start_value",
-                "increment_step",
-                "padding",
-            ]
-            print("\n Available ID types \n")
-            print_table(headers, formatted_data)
-            print()
-            print_success(f"Total {len(id_types)} ID type(s) fetched")
-            return 0
+            return cmd_list()
 
         else:
             print_error(f"Command '{command}' doesn't exit")
