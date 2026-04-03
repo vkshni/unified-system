@@ -22,7 +22,10 @@ COUNTER_FILE = DATA_DIR / "counter.json"
 idg = IDGenerator(CONFIG_FILE=str(CONFIG_FILE), COUNTER_FILE=str(COUNTER_FILE))
 
 
-# Commands
+# COMMANDS
+
+
+# generate
 def cmd_generate(args):
 
     if not args[1:]:
@@ -42,6 +45,7 @@ def cmd_generate(args):
     return 0
 
 
+# add
 def cmd_add(args):
 
     if not args[1:]:
@@ -78,6 +82,7 @@ def cmd_add(args):
         return 1
 
 
+# update
 def cmd_update(args):
 
     if not args[1:]:
@@ -248,7 +253,7 @@ def run_shell():
             args = parts[1:] if len(parts) > 1 else []
 
             if command == "exit":
-                if confirm("Exit idgen?"):
+                if confirm("\nExit idgen?"):
                     print("\n👋 Exiting idgen!\n")
                     break
                 else:
