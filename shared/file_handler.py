@@ -1,6 +1,12 @@
 from pathlib import Path
 import json
 import csv
+import sys
+
+
+# Adding project root to the Python Paths
+PROJECT_ROOT = Path(__file__).parent.parent.parent
+sys.path.append(str(PROJECT_ROOT))
 
 # Use Path for cross-platform compatibility
 SHARED_DIR = Path(__file__).parent
