@@ -1,0 +1,37 @@
+[
+    {
+        "url_id": "1bd1a89f-00e6-4cd2-be70-9c0033753ef1",
+        "long_url": "https://example.com/long/path",
+        "short_code": "mhP1Mr",
+        "created_at": "23-03-2026T21:25:12",
+        "visit_count": 0
+    },
+    {
+        "url_id": "b9f3cdbf-1b71-4e75-8745-34c0965f84d7",
+        "long_url": "https://docs.example.com/api/auth",
+        "short_code": "K5o1VE",
+        "created_at": "23-03-2026T21:25:50",
+        "visit_count": 0
+    },
+    {
+        "url_id": "2b029cc5-85b0-4968-ad77-7021d63b6a3e",
+        "long_url": "https://example.com/spring-sale",
+        "short_code": "zNzKQL",
+        "created_at": "23-03-2026T21:26:01",
+        "visit_count": 1
+    },
+    {
+        "url_id": "738ff14d-6d3c-41dd-990f-24743f964155",
+        "long_url": "https://www.example.com",
+        "short_code": "8mx8eZ",
+        "created_at": "03-04-2026T20:13:39",
+        "visit_count": 2
+    },
+    {
+        "url_id": "e58facb4-bde3-4218-9e14-18604c2d4b11",
+        "long_url": "https://github.io",
+        "short_code": "1kpW52",
+        "created_at": "03-04-2026T21:05:55",
+        "visit_count": 0
+    }
+]
