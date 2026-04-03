@@ -50,12 +50,12 @@ def cmd_add(args):
 
     # Parser Arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("id_type_label")
-    parser.add_argument("id_type")
-    parser.add_argument("start_value_label")
-    parser.add_argument("start_value", type=int)
-    parser.add_argument("increment_step_label")
-    parser.add_argument("increment_step", type=int)
+    parser.add_argument("name_label")
+    parser.add_argument("name")
+    parser.add_argument("start_label")
+    parser.add_argument("start", type=int)
+    parser.add_argument("step_label")
+    parser.add_argument("step", type=int)
     parser.add_argument("prefix_label")
     parser.add_argument("prefix")
     parser.add_argument("padding_label")
@@ -65,14 +65,130 @@ def cmd_add(args):
 
     # Execute
     result = idg.add_id_type(
-        parsed.id_type,
-        parsed.start_value,
-        parsed.increment_step,
+        parsed.name,
+        parsed.start,
+        parsed.step,
         parsed.prefix,
         parsed.padding,
     )
     if result:
-        print_success(f"ID type '{parsed.id_type}' added successfully")
+        print_success(f"ID type '{parsed.name}' added successfully")
+        return 0
+    else:
+        return 1
+
+
+def cmd_update(args):
+
+    if not args[1:]:
+        print_error(f"No arguments passed")
+        return 2
+
+    # Parser Arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("name_label")
+    parser.add_argument("name", type=str)
+    parser.add_argument("--start_label")
+    parser.add_argument("--start", type=int)
+    parser.add_argument("--step_label")
+    parser.add_argument("--step", type=int)
+    parser.add_argument("--prefix_label")
+    parser.add_argument("--prefix", type=str)
+    parser.add_argument("--padding_label")
+    parser.add_argument("--padding", type=int)
+
+    parsed = parser.parse_args(args[1:])
+
+    # Execute
+    kwargs = {}
+    if parsed.start:
+        kwargs["start_value"] = parsed.start
+    if parsed.step:
+        kwargs["increment_step"] = parsed.step
+    if parsed.prefix:
+        kwargs["prefix"] = parsed.prefix
+    if parsed.padding:
+        kwargs["padding"] = parsed.padding
+
+    result = idg.update_id_type(parsed.name, **kwargs)
+
+    if result:
+        print_success(f"ID type '{parsed.name}' updated successfully")
+        return 0
+    else:
+        return 1
+
+
+# delete command
+def cmd_delete(args):
+
+    if not args:
+        print_error(f"No arguments passed")
+        return 2
+
+    # Parse Arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("name_label")
+    parser.add_argument("name", type=str)
+    parser.add_argument("--force", action="store_true")
+
+    parsed = parser.parse_args(args[1:])
+
+    # Execute
+    result = idg.delete_id_type(parsed.name, force=parsed.force)
+    if result:
+        print_success(f"ID type '{parsed.name}' deleted successfully")
+        return 0
+    else:
+        return 1
+
+
+# reset command
+def cmd_reset(args):
+
+    if not args:
+        print_error(f"No arguments passed")
+        return 2
+
+    # Parse Arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("name_label")
+    parser.add_argument("name", type=str)
+    parser.add_argument("--force", action="store_true")
+
+    parsed = parser.parse_args(args[1:])
+
+    # Execute
+    result = idg.reset_counter(parsed.name, force=parsed.force)
+    if result:
+        print_success(f"ID type '{parsed.name}' reset successfully")
+        return 0
+    else:
+        return 1
+
+
+# command genpass
+def cmd_genpass(args):
+
+    if not args:
+        print_error(f"No arguments passed")
+        return 2
+
+    # Parse Arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--length_label")
+    parser.add_argument("--length", type=int)
+
+    parsed = parser.parse_args(args[1:])
+
+    # Execute
+    if parsed.length:
+        result = idg.generate_password(pwd_len=parsed.length)
+    else:
+        result = idg.generate_password()
+
+    if result:
+        print_success(f"Password generated successfully: {result}")
         return 0
     else:
         return 1
@@ -117,7 +233,7 @@ def cmd_list():
 def run_shell():
 
     print_success("Entering ID Generator")
-    print("Commands: generate, list")
+    print("Commands: generate, add, update, delete, reset, list, genpass")
 
     while True:
 
@@ -163,12 +279,24 @@ def execute_command(args):
         elif command == "add":
             return cmd_add(args)
 
+        elif command == "update":
+            return cmd_update(args)
+
+        elif command == "delete":
+            return cmd_delete(args)
+
+        elif command == "reset":
+            return cmd_reset(args)
+
         elif command == "list":
             return cmd_list()
 
+        elif command == "genpass":
+            return cmd_genpass(args)
+
         else:
             print_error(f"Command '{command}' doesn't exit")
-            print("Commands: generate, list")
+            print("Commands: generate, add, update, delete, reset, list, genpass")
             return 1
 
     except Exception as e:
