@@ -1,7 +1,14 @@
 from uuid import uuid4
-from file_handler import JSONFile, DATA_DIR
 from datetime import datetime
 from pathlib import Path
+import sys
+
+# Adding project root to the Python Paths
+PROJECT_ROOT = Path(__file__).parent.parent.parent
+sys.path.append(str(PROJECT_ROOT))
+
+# Project modules
+from shared.file_handler import JSONFile, DATA_DIR
 
 # Counter file setup
 COUNTER_FILE_PATH = DATA_DIR / "counter.json"  # ✅ Changed
