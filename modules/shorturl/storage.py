@@ -22,70 +22,12 @@ DATA_DIR = SHORTURL_DIR / "data"
 
 URL_FILE_PATH = DATA_DIR / "urls.json"
 
-# class JSONFile:
-#     """
-#     Low-level JSON file handler.
-    
-#     Manages reading and writing JSON data to disk with automatic
-#     file creation and formatting.
-#     """
 
-#     def __init__(self, file_name: str):
-#         """
-#         Initialize JSON file handler.
-        
-#         Args:
-#             file_name: Name of the JSON file to manage
-#         """
-#         self.file_path = self.create(file_name)
-
-#     def create(self, file_name: str) -> Path:
-#         """
-#         Create JSON file if it doesn't exist.
-        
-#         Args:
-#             file_name: Name of file to create
-            
-#         Returns:
-#             Path: Full path to the file
-#         """
-#         path = BASE_DIR / file_name
-        
-#         # Initialize empty JSON array if file doesn't exist
-#         if not path.exists():
-#             with open(path, "w") as f:
-#                 json.dump([], f, indent=4)
-        
-#         return path
-
-#     def read_all(self) -> list:
-#         """
-#         Read all data from JSON file.
-        
-#         Returns:
-#             list: Parsed JSON data
-#         """
-#         with open(self.file_path, "r") as f:
-#             data = json.load(f)
-#             return data
-
-#     def write_all(self, data: list):
-#         """
-#         Write data to JSON file.
-        
-#         Args:
-#             data: List of dictionaries to write
-#         """
-#         with open(self.file_path, "w") as f:
-#             json.dump(data, f, indent=4)
-
-
-
-
+# URL DB
 class URLDB:
     """
     URL Database Manager
-    
+
     Provides CRUD operations for URL records with in-memory caching
     for performance optimization.
     """
@@ -93,7 +35,7 @@ class URLDB:
     def __init__(self, URL_FILE: str = URL_FILE_PATH):
         """
         Initialize database with JSON file backend.
-        
+
         Args:
             url_file: Name of JSON file for storage (default: urls.json)
         """
@@ -113,7 +55,7 @@ class URLDB:
     def add(self, url: URL):
         """
         Add new URL to database.
-        
+
         Args:
             url: URL entity to add
         """
@@ -124,10 +66,10 @@ class URLDB:
     def find_by_url(self, long_url: str) -> URL:
         """
         Find URL by long URL string.
-        
+
         Args:
             long_url: Original long URL to search for
-            
+
         Returns:
             URL: URL entity if found, None otherwise
         """
@@ -142,10 +84,10 @@ class URLDB:
     def find_by_code(self, short_code: str) -> URL:
         """
         Find URL by short code.
-        
+
         Args:
             short_code: 6-character short code to search for
-            
+
         Returns:
             URL: URL entity if found, None otherwise
         """
@@ -160,7 +102,7 @@ class URLDB:
     def list_all(self) -> list[URL]:
         """
         Get all URLs from database.
-        
+
         Returns:
             list[URL]: List of all URL entities
         """
@@ -170,15 +112,15 @@ class URLDB:
     def update(self, url: URL) -> bool:
         """
         Update existing URL in database.
-        
+
         Args:
             url: URL entity with updated data
-            
+
         Returns:
             bool: True if updated, False if not found
         """
         updated = False
-        
+
         # Find and update by url_id
         for i, url_dict in enumerate(self._cache):
             if url_dict["url_id"] == url.url_id:
@@ -191,6 +133,7 @@ class URLDB:
             self._save_cache()
 
         return updated
+
 
 if __name__ == "__main__":
 
