@@ -7,18 +7,12 @@ import argparse
 
 # Project root
 PROJECT_ROOT = Path(__file__).parent.parent.parent
-sys.path.append(str(PROJECT_ROOT))
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 # Project modules
 from modules.taski.engine import TaskManager
 from shared.ui_utils import print_error, print_success, print_table, confirm
-from exceptions import (
-    TaskNotFoundError,
-    FilterNotFoundError,
-    FieldEmptyError,
-    StateTransitionError,
-    CompletedTimeError,
-)
 
 # Data Path
 DATA_DIR = Path(__file__).parent / "data"
@@ -28,175 +22,354 @@ TASK_FILE_PATH = DATA_DIR / "tasks.csv"
 tm = TaskManager(TASK_FILE=TASK_FILE_PATH)
 
 
+# ========== COMMANDS ==========
+
+
 def cmd_add(args):
-    tm.add_task(args.title, note=args.note or "")
-    print(f"✓ Task '{args.title}' added.")
+    """Add a new task"""
+    if len(args) < 2:
+        print_error("Usage: add <title> [--note <text>]")
+        return 2
+
+    try:
+        parser = argparse.ArgumentParser()
+        parser.add_argument("title", type=str)
+        parser.add_argument("--note", type=str, default="")
+
+        # Join remaining args as title if spaces
+        title_parts = []
+        note = ""
+        i = 1
+
+        while i < len(args):
+            if args[i] == "--note":
+                if i + 1 < len(args):
+                    note = args[i + 1]
+                break
+            else:
+                title_parts.append(args[i])
+            i += 1
+
+        title = " ".join(title_parts)
+
+        if not title:
+            print_error("Title cannot be empty")
+            return 1
+
+        result = tm.add_task(title, note=note)
+
+        if result:
+            print_success(f"Task '{title}' added successfully")
+            return 0
+        else:
+            print_error("Failed to add task")
+            return 1
+
+    except Exception as e:
+        print_error(f"Error: {e}")
+        return 1
 
 
-def cmd_list(args):
-    tasks = tm.view_all()
-    if not tasks:
-        print('No tasks yet. Add one with: taski add "Task title"')
-        return
-    print(f"\n{'#':<5} {'TITLE':<25} {'STATE':<15} {'CREATED':<22} {'NOTE'}")
-    print("-" * 85)
-    for t in tasks:
-        num, task_id, title, created, completed, note, state = t
-        print(f"{num:<5} {title:<25} {state:<15} {created:<22} {note}")
-    print()
+def cmd_list():
+    """List all tasks"""
+    try:
+        tasks = tm.view_all()
+
+        if not tasks:
+            print('\nNo tasks yet. Add one with: add "Task title"\n')
+            return 0
+
+        formatted_data = [
+            [
+                task[0],  # display_id
+                task[2][:30] + "..." if len(task[2]) > 30 else task[2],  # title
+                task[6],  # state
+                task[3][:10] if task[3] else "-",  # created_at (date only)
+                (
+                    task[5][:20] + "..."
+                    if task[5] and len(task[5]) > 20
+                    else task[5] or "-"
+                ),  # note
+            ]
+            for task in tasks
+        ]
+
+        headers = ["ID", "Title", "State", "Created", "Note"]
+
+        print("\n Tasks \n")
+        print_table(headers, formatted_data)
+        print()
+        print_success(f"Total {len(tasks)} task(s)")
+        return 0
+
+    except Exception as e:
+        print_error(f"Error: {e}")
+        return 1
 
 
 def cmd_update(args):
-    if args.title is None and args.note is None:
-        print("Nothing to update. Use --title or --note to specify what to change.")
-        print('  Example: taski update 1 --title "New Title"')
-        sys.exit(1)
-    tm.update_task(args.id, title=args.title, note=args.note)
-    print(f"✓ Task {args.id} updated.")
+    """Update a task"""
+    if len(args) < 2:
+        print_error("Usage: update <id> [--title <text>] [--note <text>]")
+        return 2
+
+    try:
+        display_id = int(args[1])
+
+        parser = argparse.ArgumentParser()
+        parser.add_argument("id", type=int)
+        parser.add_argument("--title", type=str)
+        parser.add_argument("--note", type=str)
+
+        parsed = parser.parse_args(args[1:])
+
+        if parsed.title is None and parsed.note is None:
+            print_error("Nothing to update. Use --title or --note")
+            return 1
+
+        result = tm.update_task(
+            parsed.id,
+            title=parsed.title,
+            note=parsed.note,
+        )
+
+        if result:
+            print_success(f"Task {parsed.id} updated successfully")
+            return 0
+        else:
+            print_error("Failed to update task")
+            return 1
+
+    except ValueError:
+        print_error("Invalid task ID")
+        return 1
+    except Exception as e:
+        print_error(f"Error: {e}")
+        return 1
 
 
 def cmd_advance(args):
-    tm.update_task(args.id, state=args.state.upper())
-    print(f"✓ Task {args.id} advanced to {args.state.upper()}.")
+    """Advance task to next state"""
+    if len(args) < 3:
+        print_error("Usage: advance <id> <state>")
+        print("States: in_progress, done, cancelled")
+        return 2
+
+    try:
+        display_id = int(args[1])
+        state = args[2].upper()
+
+        valid_states = ["IN_PROGRESS", "DONE", "CANCELLED"]
+        if state not in valid_states:
+            print_error(f"Invalid state. Use: {', '.join(valid_states)}")
+            return 1
+
+        result = tm.update_task(display_id, state=state)
+
+        if result:
+            print_success(f"Task {display_id} advanced to {state}")
+            return 0
+        else:
+            print_error("Failed to advance task")
+            return 1
+
+    except ValueError:
+        print_error("Invalid task ID")
+        return 1
+    except Exception as e:
+        print_error(f"Error: {e}")
+        return 1
 
 
 def cmd_delete(args):
-    tm.delete_task(args.id)
-    print(f"✓ Task {args.id} deleted.")
+    """Delete a task"""
+    if len(args) < 2:
+        print_error("Usage: delete <id> [--force]")
+        return 2
+
+    try:
+        parser = argparse.ArgumentParser()
+        parser.add_argument("id", type=int)
+        parser.add_argument("--force", action="store_true")
+
+        parsed = parser.parse_args(args[1:])
+
+        if not parsed.force:
+            if not confirm(f"Delete task {parsed.id}?"):
+                print("Cancelled")
+                return 0
+
+        result = tm.delete_task(parsed.id)
+
+        if result:
+            print_success(f"Task {parsed.id} deleted")
+            return 0
+        else:
+            print_error("Failed to delete task")
+            return 1
+
+    except ValueError:
+        print_error("Invalid task ID")
+        return 1
+    except Exception as e:
+        print_error(f"Error: {e}")
+        return 1
 
 
 def cmd_filter(args):
-    tasks = tm.get_task_by_filter(args.by.upper(), args.value)
-    if not tasks:
-        print(f"No tasks found where {args.by.upper()} = '{args.value}'.")
-        return
-    print(f"\n{'TITLE':<25} {'STATE':<15} {'CREATED':<22} {'NOTE'}")
-    print("-" * 75)
-    for t in tasks:
-        print(
-            f"{t.title:<25} {t.state:<15} {t.created_at.strftime('%d-%m-%Y %H:%M:%S'):<22} {t.note}"
-        )
-    print()
+    """Filter tasks"""
+    if len(args) < 3:
+        print_error("Usage: filter <field> <value>")
+        print("Fields: title, state, created_on, completed_on")
+        return 2
+
+    try:
+        field = args[1].upper()
+        value = args[2]
+
+        tasks = tm.get_task_by_filter(field, value)
+
+        if not tasks:
+            print(f"No tasks found where {field} = '{value}'")
+            return 0
+
+        print(f"\n{'ID':<5} {'TITLE':<30} {'STATE':<15} {'CREATED':<12}")
+        print("-" * 70)
+        for t in tasks:
+            created = (
+                t.created_at.strftime("%d-%m-%Y")
+                if hasattr(t.created_at, "strftime")
+                else str(t.created_at)[:10]
+            )
+            title = t.title[:27] + "..." if len(t.title) > 30 else t.title
+            print(f"{t.display_id:<5} {title:<30} {t.state:<15} {created:<12}")
+        print()
+        print_success(f"Found {len(tasks)} task(s)")
+        return 0
+
+    except Exception as e:
+        print_error(f"Error: {e}")
+        return 1
 
 
-def cmd_help(args):
+def cmd_help():
+    """Show help message"""
     help_text = """
-taski — a simple state-driven task manager
+╔════════════════════════════════════════════════════════════════╗
+║                   TASKI - Task Manager                         ║
+╚════════════════════════════════════════════════════════════════╝
+
+USAGE:
+  taski <command> [options]
 
 COMMANDS:
-  add <title> [--note <text>]         Add a new task
+  add <title> [--note <text>]        Add a new task
   list                                List all tasks
-  update <id> [--title] [--note]      Edit a task's title or note
+  update <id> [options]               Update a task
   advance <id> <state>                Move task to next state
-  delete <id>                         Delete a task
-  filter <by> <value>                 Filter tasks by field
+  delete <id> [--force]               Delete a task
+  filter <field> <value>              Filter tasks
+  help                                Show this help message
+  exit                                Exit taski
+
+UPDATE OPTIONS:
+  --title <text>                      New title
+  --note <text>                       New note
 
 STATES:
   Flow: TODO → IN_PROGRESS → DONE
-  Valid targets for advance: in_progress, done, cancelled
-  Rules:
-    - Cannot skip states (TODO → DONE not allowed)
-    - Cannot modify a DONE task
-    - Cannot reverse a transition
+  Valid states: in_progress, done, cancelled
 
-FILTER OPTIONS:
-  title         Match by exact title
-  created_on    Match by date (format: DD-MM-YYYY)
-  completed_on  Match by completion date (format: DD-MM-YYYY)
+FILTER FIELDS:
+  title, state, created_on, completed_on
 
 EXAMPLES:
-  taski add "Learn Python" --note "2 hrs"
+  taski add "Learn Python" --note "2 hours daily"
   taski list
   taski advance 1 in_progress
-  taski advance 1 done
   taski update 2 --title "Learn Python 3"
-  taski delete 3
-  taski filter title "Learn Python"
+  taski delete 3 --force
+  taski filter state TODO
   taski filter created_on "26-02-2026"
+
+RULES:
+  - Cannot skip states (TODO → DONE not allowed)
+  - Cannot modify DONE tasks
+  - Cannot reverse transitions
 """
     print(help_text)
+    return 0
 
 
-def handle_error(e):
-    errors = {
-        TaskNotFoundError: "Task not found. Run 'taski list' to see valid task numbers.",
-        FilterNotFoundError: "Invalid filter. Use: title, created_on, or completed_on.",
-        FieldEmptyError: "Title cannot be empty or blank.",
-        StateTransitionError: str(e),
-        CompletedTimeError: str(e),
-    }
-    msg = errors.get(type(e), f"Unexpected error: {e}")
-    print(f"Error: {msg}")
-    sys.exit(1)
+# ========== SHELL & EXECUTION ==========
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        prog="taski",
-        description="A state-driven task manager CLI",
-        add_help=True,
-    )
-    sub = parser.add_subparsers(dest="command")
-    sub.required = True
+def run_shell():
+    """Interactive shell mode"""
+    print_success("Entering Taski - Task Manager")
+    print("Type 'help' for available commands or 'exit' to quit")
 
-    # add
-    p_add = sub.add_parser("add", help="Add a new task")
-    p_add.add_argument("title", help="Task title")
-    p_add.add_argument("--note", help="Optional note", default="")
-    p_add.set_defaults(func=cmd_add)
+    while True:
+        try:
+            user_input = input("[taski] ").strip()
+            if not user_input:
+                continue
 
-    # list
-    p_list = sub.add_parser("list", help="List all tasks")
-    p_list.set_defaults(func=cmd_list)
+            parts = user_input.split()
+            command = parts[0]
 
-    # update
-    p_update = sub.add_parser("update", help="Update task title or note")
-    p_update.add_argument("id", type=int, help="Task display number")
-    p_update.add_argument("--title", help="New title", default=None)
-    p_update.add_argument("--note", help="New note", default=None)
-    p_update.set_defaults(func=cmd_update)
+            if command == "exit":
+                if confirm("Exit taski?"):
+                    print("\n👋 Exiting taski!\n")
+                    break
+                else:
+                    continue
 
-    # advance
-    p_advance = sub.add_parser("advance", help="Advance task to next state")
-    p_advance.add_argument("id", type=int, help="Task display number")
-    p_advance.add_argument(
-        "state", choices=["in_progress", "done", "cancelled"], help="Target state"
-    )
-    p_advance.set_defaults(func=cmd_advance)
+            result = execute_command(parts)
 
-    # delete
-    p_delete = sub.add_parser("delete", help="Delete a task")
-    p_delete.add_argument("id", type=int, help="Task display number")
-    p_delete.set_defaults(func=cmd_delete)
+            if result != 0 and result != 2:
+                print_error("Command failed")
 
-    # filter
-    p_filter = sub.add_parser("filter", help="Filter tasks by field")
-    p_filter.add_argument(
-        "by", choices=["title", "created_on", "completed_on"], help="Filter field"
-    )
-    p_filter.add_argument("value", help="Value to match")
-    p_filter.set_defaults(func=cmd_filter)
+        except KeyboardInterrupt:
+            print("\n")
+            if confirm("Exit taski?"):
+                print("\n👋 Exiting taski!\n")
+                break
+        except Exception as e:
+            print_error(f"Error: {e}")
 
-    # help
-    p_help = sub.add_parser("help", help="Show usage and examples")
-    p_help.set_defaults(func=cmd_help)
 
-    args = parser.parse_args()
+def execute_command(args):
+    """Execute a command"""
+    if not args:
+        return 1
+
+    command = args[0].lower()
 
     try:
-        args.func(args)
-    except (
-        TaskNotFoundError,
-        FilterNotFoundError,
-        FieldEmptyError,
-        StateTransitionError,
-        CompletedTimeError,
-    ) as e:
-        handle_error(e)
+        if command == "add":
+            return cmd_add(args)
+        elif command == "list":
+            return cmd_list()
+        elif command == "update":
+            return cmd_update(args)
+        elif command == "advance":
+            return cmd_advance(args)
+        elif command == "delete":
+            return cmd_delete(args)
+        elif command == "filter":
+            return cmd_filter(args)
+        elif command == "help":
+            return cmd_help()
+        else:
+            print_error(f"Unknown command: '{command}'")
+            print("Type 'help' for available commands")
+            return 1
+
     except Exception as e:
-        print(f"Unexpected error: {e}")
-        sys.exit(1)
+        print_error(f"Error: {e}")
+        return 1
 
 
 if __name__ == "__main__":
-    main()
+    run_shell()
