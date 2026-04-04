@@ -1,0 +1,6 @@
+task_id,title,created_at,completed_at,note,state
+8762d586-d5cb-4d60-ba44-9e08f40727a7,Build CLI,25-02-2026 20:05:12,28-02-2026 15:57:58,Initial version,DONE
+94c85648-db52-44dc-abaf-b3002e59bad9,Learn Python,28-02-2026 15:55:20,04-04-2026 13:11:18,2 hrs,DONE
+58d7e1cb-33d4-4b42-bc13-d04fa61467f7,Learn UIUX,01-03-2026 12:48:48,,1 hr,TODO
+ebe3f1af-daf4-412c-8107-8730ab66b020,Java,07-03-2026 15:24:33,,Learn java,IN_PROGRESS
+8c8640d0-aaf3-43b2-a2b4-e1fdd5c57933,Learn JavaScript,04-04-2026 12:58:46,,1 hr,TODO
