@@ -1,0 +1,56 @@
+[
+    {
+        "snippet_id": "22032026_00001",
+        "title": "My First Snippet",
+        "content": "Hello World",
+        "tag": "test",
+        "created_at": "22-03-2026T12:28:16",
+        "status": "ACTIVE",
+        "access_level": "PUBLIC"
+    },
+    {
+        "snippet_id": "22032026_00002",
+        "title": "Title with <> brackets",
+        "content": "Content",
+        "tag": "untagged",
+        "created_at": "22-03-2026T12:29:27",
+        "status": "ACTIVE",
+        "access_level": "PUBLIC"
+    },
+    {
+        "snippet_id": "22032026_00003",
+        "title": "Title with emoji \ud83d\udd25\ud83d\udc0d",
+        "content": "Content",
+        "tag": "untagged",
+        "created_at": "22-03-2026T12:29:42",
+        "status": "ACTIVE",
+        "access_level": "PUBLIC"
+    },
+    {
+        "snippet_id": "22032026_00004",
+        "title": "Multiline",
+        "content": "Line 1\nLine 2\nLine 3",
+        "tag": "test",
+        "created_at": "22-03-2026T12:30:04",
+        "status": "ACTIVE",
+        "access_level": "PUBLIC"
+    },
+    {
+        "snippet_id": "22032026_00005",
+        "title": "Title",
+        "content": "Content",
+        "tag": "my_tag_name",
+        "created_at": "22-03-2026T12:31:09",
+        "status": "ACTIVE",
+        "access_level": "PUBLIC"
+    },
+    {
+        "snippet_id": "22032026_00006",
+        "title": "Title",
+        "content": "Content",
+        "tag": "my_tag_name",
+        "created_at": "22-03-2026T12:50:07",
+        "status": "ACTIVE",
+        "access_level": "PUBLIC"
+    }
+]
