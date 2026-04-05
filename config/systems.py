@@ -10,7 +10,7 @@ SYSTEMS = {
         "name": "Penny Tracker",
         "description": "Track expenses",
         "module": "modules.penny.main",
-        "protected": True,
+        "protected": False,
     },
     "taski": {
         "name": "Task Manager",
