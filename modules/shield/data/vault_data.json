@@ -1,0 +1,38 @@
+[
+    {
+        "credential_id": "562de893-e3a0-4c21-b0dc-782020375991",
+        "service_name": "instagram",
+        "label": "default",
+        "username": "vkshni",
+        "password": "sdlfs",
+        "created_at": "07-03-2026T14:10:45",
+        "updated_at": null
+    },
+    {
+        "credential_id": "207b30e6-2207-41ba-971d-b8bc0f9f8333",
+        "service_name": "facebook",
+        "label": "default",
+        "username": "v_k_s",
+        "password": "vks@fb",
+        "created_at": "07-03-2026T14:12:21",
+        "updated_at": "07-03-2026T14:13:01"
+    },
+    {
+        "credential_id": "bf199b5e-8e99-4930-bc3f-7cef4c0d2a3c",
+        "service_name": "GitHub",
+        "label": "default",
+        "username": "vkshni",
+        "password": "giti",
+        "created_at": "07-03-2026T14:25:30",
+        "updated_at": "07-03-2026T14:26:23"
+    },
+    {
+        "credential_id": "1c323780-0a1b-4a2f-a8f2-e8561b0e8db6",
+        "service_name": "instagram",
+        "label": "work",
+        "username": "vks._work",
+        "password": "work123",
+        "created_at": "07-03-2026T14:26:47",
+        "updated_at": "07-03-2026T14:41:01"
+    }
+]
