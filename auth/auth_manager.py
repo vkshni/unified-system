@@ -40,6 +40,21 @@ class AuthService:
         self.session = JSONFile(SESSION_FILE_PATH)
         self.is_authenticated = self.check_session()
 
+    def require_authenticated(self):
+        """
+        Assert that the current session is authenticated.
+
+        Called at the start of every sensitive Vault operation. Raises
+        immediately if is_authenticated is False, halting execution before
+        any data is accessed or modified.
+
+        Raises:
+            PermissionError: If is_authenticated is False.
+        """
+
+        if not self.is_authenticated:
+            raise PermissionError("Access denied. Please login first")
+
     # Check session
     def check_session(self):
 
