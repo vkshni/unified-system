@@ -1,0 +1,13 @@
+id,amount,category,date,note
+a3f2b8c1-4d5e-6f7a-8b9c-0d1e2f3a4b5c,45.50,food,15-02-2026,lunch at cafe
+b4e3c9d2-5e6f-7a8b-9c0d-1e2f3a4b5c6d,120.00,transport,14-02-2026,uber ride
+c5f4d0e3-6f7a-8b9c-0d1e-2f3a4b5c6d7e,25.00,entertainment,15-02-2026,
+5ea5ce70-4683-4462-9717-f7286305ff6a,130.0,food,23-02-2026,
+47bb872e-78ee-4c67-941a-34f4ade3447c,150.0,education,20-02-2026,bag
+6c1c5c6e-3668-47c8-8548-893c714bbfcc,100.0,food,21-02-2026,coffee
+4c7408f3-900f-4ccc-80b4-034a2219796c,100.0,transport,22-02-2026,metro travel
+fdd9e17c-9071-4af0-b637-e3711acb89e3,100.0,education,22-02-2026,notebook and pen
+1c6b8ff4-0920-499e-9ca3-eb27948bf774,200.0,food,28-02-2026,
+e2e806f1-a677-4f48-841a-6b86ba7f9a55,1000.0,entertainment,15-01-2026,Concert at JLN
+0298c436-9e2f-42c0-af5a-89ce40ebba3a,100.0,food,07-03-2026,burger
+af3588de-ccff-4ead-b66f-e846e72f3eda,200.0,food,26-03-2026,
